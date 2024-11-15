@@ -8,6 +8,8 @@ const app = express()
 const cors = require('cors')
 app.use(cors())
 
+// 解析 JSON 请求体
+app.use(express.json());
 // 配置解析表单的中间件
 app.use(express.urlencoded({ extended: false }))
 
@@ -21,6 +23,32 @@ app.use((req, res, next) => {
         })
     }
     next()
+})
+
+// 引入分析token的中间件和加密串
+const { jwtSecretKey } = require('./config')
+const expressJWT = require('express-jwt')
+// 指定哪些接口不需要token验证
+// @ts-ignore
+app.use(expressJWT({
+    secret: jwtSecretKey
+}).unless({
+    path: [
+        /^\/user\/register/,
+        /^\/user\/login/
+    ]
+}))
+
+// routers
+const userRouter = require('./router/user')
+app.use('/user', userRouter)
+
+// 错误级中间件
+app.use((err, req, res, next) => {
+    // token错误
+    if (err.name == 'UnauthorizedError') return res.cc('Identity Validation Failed')
+    // 未知错误
+    res.cc(err)
 })
 
 app.listen(7777, () => {
