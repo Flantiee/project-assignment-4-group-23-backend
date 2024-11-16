@@ -48,6 +48,9 @@ app.use('/user', userRouter)
 const productRouter = require('./router/product')
 app.use('/products', productRouter)
 
+const cartRouter = require('./router/cart')
+app.use('/cart', cartRouter)
+
 // 错误级中间件
 app.use((err, req, res, next) => {
     // token错误
