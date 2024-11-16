@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs')
 // 用这个包来生成 Token 字符串
 const jwt = require('jsonwebtoken')
 // 获取加密值
-const { jwtSecretKey } = require('../config')
+const { jwtSecretKey } = require('../config/jwtConfig')
 
 // 注册用户的处理函数
 exports.regUser = (req, res) => {

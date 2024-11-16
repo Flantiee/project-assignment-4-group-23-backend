@@ -8,6 +8,8 @@ const app = express()
 const cors = require('cors')
 app.use(cors())
 
+// upload imag
+app.use('/uploads/', express.static('public/uploads/'))
 // 解析 JSON 请求体
 app.use(express.json());
 // 配置解析表单的中间件
@@ -26,7 +28,7 @@ app.use((req, res, next) => {
 })
 
 // 引入分析token的中间件和加密串
-const { jwtSecretKey } = require('./config')
+const { jwtSecretKey } = require('./config/jwtConfig')
 const expressJWT = require('express-jwt')
 // 指定哪些接口不需要token验证
 // @ts-ignore
@@ -42,6 +44,9 @@ app.use(expressJWT({
 // routers
 const userRouter = require('./router/user')
 app.use('/user', userRouter)
+
+const productRouter = require('./router/product')
+app.use('/products', productRouter)
 
 // 错误级中间件
 app.use((err, req, res, next) => {
