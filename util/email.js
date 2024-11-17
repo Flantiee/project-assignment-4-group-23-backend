@@ -1,6 +1,4 @@
-const nodemailer = require('nodemailer');
-
-// import nodemailer from 'nodemailer'
+import nodemailer from 'nodemailer';
 
 const emailTransporter = nodemailer.createTransport({
     service: 'gmail',  // 选择邮件服务提供商（这里使用 Gmail）
@@ -10,5 +8,4 @@ const emailTransporter = nodemailer.createTransport({
     }
 });
 
-
-module.exports = emailTransporter
+export default emailTransporter;

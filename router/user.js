@@ -1,20 +1,20 @@
-// 先引入express框架
-const express = require('express')
+// 引入 express 框架
+import express from 'express';
 
 // 创建路由
-const router = express.Router()
+const router = express.Router();
 
-// handler_midleware
-const userHandler = require('../router_handler/user')
+// 引入路由处理函数
+import userHandler from '../router_handler/user.js';
 
+// 注册路由
+router.post('/register', userHandler.regUser);
 
-// register
-router.post('/register', userHandler.regUser)
+// 登录路由
+router.post('/login', userHandler.login);
 
-// login-router 
-router.post('/login', userHandler.login)
+// 更新用户信息
+router.put('/update', userHandler.updateUser);
 
-// update user
-router.put('/update', userHandler.updateUser)
-
-module.exports = router
+// 导出路由
+export default router;

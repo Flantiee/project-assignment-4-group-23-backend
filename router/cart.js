@@ -1,11 +1,11 @@
 // 先引入express框架
-const express = require('express')
+import express from 'express';
 
 // 创建路由
 const router = express.Router()
 
 // handler_midleware
-const cartHandler = require('../router_handler/cart')
+import cartHandler from '../router_handler/cart.js'
 
 
 // create
@@ -16,7 +16,7 @@ router.put('/', cartHandler.update)
 
 router.get('/', cartHandler.getCartListById)
 
-router.delete('/', cartHandler.delete)
+router.delete('/', cartHandler.deleteRecord)
 
 
-module.exports = router
+export default router

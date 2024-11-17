@@ -1,6 +1,6 @@
-const db = require('../db')
+import db from '../db/index.js';
 
-exports.create = (req, res) => {
+const create = (req, res) => {
     const { user_id, product_id, quantity } = req.body;
 
     // 1. 查询商品库存数量
@@ -61,7 +61,7 @@ exports.create = (req, res) => {
     });
 };
 
-exports.update = (req, res) => {
+const update = (req, res) => {
     const { id, quantity } = req.body;
 
     // 确保 quantity 是一个正整数
@@ -122,7 +122,7 @@ exports.update = (req, res) => {
     });
 };
 
-exports.delete = (req, res) => {
+const deleteRecord = (req, res) => {
     const { id } = req.query;
 
     // 1. 查询购物车中该商品的数量
@@ -174,7 +174,7 @@ exports.delete = (req, res) => {
     });
 };
 
-exports.getCartListById = (req, res) => {
+const getCartListById = (req, res) => {
     const { user_id } = req.query;
     const sqlStr = `SELECT cart.*, product.name, product.image_url, product.price, description FROM cart LEFT JOIN product ON cart.product_id = product.id WHERE cart.user_id = ? AND cart.checkout_id IS NULL`
 
@@ -188,3 +188,5 @@ exports.getCartListById = (req, res) => {
         })
     })
 }
+
+export default { create, update, deleteRecord, getCartListById }

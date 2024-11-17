@@ -1,8 +1,8 @@
-const db = require('../db')
-const emailTransporter = require('../util/email')
-const handlebars = require('handlebars');
-const fs = require('fs');
-const path = require('path');
+import db from '../db/index.js';
+import emailTransporter from '../util/email.js';
+import handlebars from 'handlebars';
+import fs from 'fs';
+import path from 'path';
 
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {
@@ -13,7 +13,7 @@ const query = (sql, params) => {
     });
 };
 
-exports.getCheckOutDetail = (req, res) => {
+const getCheckOutDetail = (req, res) => {
     const { user_id } = req.query;
 
     const sqlStr = `
@@ -71,7 +71,7 @@ exports.getCheckOutDetail = (req, res) => {
 
 
 
-exports.confirmCheckOut = async (req, res) => {
+const confirmCheckOut = async (req, res) => {
     const { user_id } = req.query;
 
     try {
@@ -187,7 +187,7 @@ exports.confirmCheckOut = async (req, res) => {
     }
 };
 
-exports.getPreviousOrderList = (req, res) => {
+const getPreviousOrderList = (req, res) => {
     const { user_id } = req.query;
     const sqlStr = `SELECT * FROM checkout WHERE user_id = ?`
     db.query(sqlStr, user_id, (err, results) => {
@@ -198,4 +198,10 @@ exports.getPreviousOrderList = (req, res) => {
             data: results
         })
     })
+}
+
+export default {
+    getCheckOutDetail,
+    confirmCheckOut,
+    getPreviousOrderList
 }

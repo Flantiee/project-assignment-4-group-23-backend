@@ -1,6 +1,6 @@
-const db = require('../db')
-const upload = require('../util/upload')
-exports.create = (req, res) => {
+import db from '../db/index.js';
+import upload from '../util/upload.js';
+const create = (req, res) => {
     upload(req, res).then(imgsrc => {
 
         const { name, price, category, brand, quantity, description } = req.body;
@@ -19,7 +19,7 @@ exports.create = (req, res) => {
     })
 }
 
-exports.update = (req, res) => {
+const update = (req, res) => {
     upload(req, res).then(imgsrc => {
         const { name, price, category, brand, quantity, description, id } = req.body;
 
@@ -45,7 +45,7 @@ exports.update = (req, res) => {
     })
 }
 
-exports.getDetail = (req, res) => {
+const getDetail = (req, res) => {
     const { id } = req.params
     const sqlStr = `SELECT * FROM product WHERE id = ?`
     db.query(sqlStr, parseInt(id, 10), (err, results) => {
@@ -59,7 +59,7 @@ exports.getDetail = (req, res) => {
     })
 }
 
-exports.delete = (req, res) => {
+const deleteProduct = (req, res) => {
     const { id } = req.params
     const sqlStr = `DELETE FROM product WHERE id = ?`
     db.query(sqlStr, parseInt(id, 10), (err, results) => {
@@ -71,7 +71,7 @@ exports.delete = (req, res) => {
     })
 }
 
-exports.getProductsByList = async (req, res) => {
+const getProductsByList = async (req, res) => {
     // 1.针对name进行模糊查询
     // 2.针对价格或时间进行升序或降序
     // 3. 拥有分页功能
@@ -139,4 +139,12 @@ exports.getProductsByList = async (req, res) => {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
     }
+}
+
+export default {
+    create,
+    update,
+    getDetail,
+    deleteProduct,
+    getProductsByList
 }

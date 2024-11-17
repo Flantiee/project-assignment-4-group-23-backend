@@ -1,37 +1,34 @@
-// 1. 引入依赖
-const multer = require('multer');
-const md5 = require('md5');
+import multer from 'multer';
+import md5 from 'md5';
+import path from 'path';
 
-// 2. 引入工具
-const path = require('path') //
-const resolve = (dir) => {
-    return path.join(__dirname, './', dir)
-}
+// 工具函数：获取路径
+const resolve = (dir) => path.join(__dirname, './', dir);
 
-// 3. multer的配置对象
-let storage = multer.diskStorage({
-    // 3.1 存储路径
-    destination: function (req, file, cb) {
-        // 3.1.1 允许图片上传 
+// multer存储配置
+const storage = multer.diskStorage({
+    // 存储路径
+    destination: (req, file, cb) => {
+        // 只允许上传 JPEG 和 PNG 图片
         if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-            cb(null, resolve('../uploads'))
+            cb(null, resolve('../uploads'));
         } else {
-            // 3.1.2 限制其他文件上传类型
-            cb({ error: 'Mime type not supported' })
+            // 如果文件类型不允许，返回错误
+            cb(new Error('Mime type not supported'), false);
         }
-
     },
-    //  3.2 存储名称
-    filename: function (req, file, cb) {
-        let fileFormat = (file.originalname).split(".");
-        cb(null, md5(+new Date()) + "." + fileFormat[fileFormat.length - 1]);
+    // 存储文件名
+    filename: (req, file, cb) => {
+        const fileFormat = file.originalname.split('.');
+        const fileExtension = fileFormat[fileFormat.length - 1];
+        cb(null, md5(+new Date()) + '.' + fileExtension);  // 使用 md5 和当前时间戳生成文件名
     },
 });
 
-// 4. 添加配置
+// 配置 multer
 const multerConfig = multer({
     storage: storage,
 });
 
-// 5. 导出配置好的multerConfig
-module.exports = multerConfig;
+// 导出配置好的 multer 实例
+export default multerConfig;

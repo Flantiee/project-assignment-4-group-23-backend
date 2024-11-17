@@ -1,23 +1,19 @@
 // 先引入express框架
-const express = require('express')
+import express from 'express';
 
 // 创建路由
-const router = express.Router()
+const router = express.Router();
 
 // handler_midleware
-const checkoutHandler = require('../router_handler/checkout.js')
+import checkoutHandler from '../router_handler/checkout.js';
 
-// get CheckOut Detail
-router.get('/', checkoutHandler.getCheckOutDetail)
+// 获取结账详情
+router.get('/', checkoutHandler.getCheckOutDetail);
 
-// confirm checkout
-router.post('/', checkoutHandler.confirmCheckOut)
+// 确认结账
+router.post('/', checkoutHandler.confirmCheckOut);
 
-// getPreviousOrderList
-router.get('/previous', checkoutHandler.getPreviousOrderList)
+// 获取之前的订单列表
+router.get('/previous', checkoutHandler.getPreviousOrderList);
 
-
-
-
-
-module.exports = router
+export default router;

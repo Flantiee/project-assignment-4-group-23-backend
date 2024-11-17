@@ -1,24 +1,25 @@
-// 先引入express框架
-const express = require('express')
+// 引入 express 框架
+import express from 'express';
 
 // 创建路由
-const router = express.Router()
+const router = express.Router();
 
-// handler_midleware
-const productHandler = require('../router_handler/product')
-
+// 引入 handler_middleware
+import productHandler from '../router_handler/product.js';
 
 // create
-router.post('/', productHandler.create)
+router.post('/', productHandler.create);
 
 // update
-router.put('/', productHandler.update)
+router.put('/', productHandler.update);
 
-// get one user
-router.get('/:id', productHandler.getDetail)
+// 获取一个产品的详情
+router.get('/:id', productHandler.getDetail);
 
-router.get('/', productHandler.getProductsByList)
+// 获取产品列表
+router.get('/', productHandler.getProductsByList);
 
-router.delete('/:id', productHandler.delete)
+// 删除一个产品
+router.delete('/:id', productHandler.deleteProduct);
 
-module.exports = router
+export default router;

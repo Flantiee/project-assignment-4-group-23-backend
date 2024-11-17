@@ -1,67 +1,66 @@
-// 引入express框架
-const express = require('express')
+import express from 'express';
+import cors from 'cors';
+import expressJWT from 'express-jwt';
+import jwtConfig from './config/jwtConfig.js';
+const { jwtSecretKey } = jwtConfig;
+
+// 引入路由
+import userRouter from './router/user.js';
+import productRouter from './router/product.js';
+import cartRouter from './router/cart.js';
+import checkOutRouter from './router/checkout.js';
 
 // 构造服务器实例
-const app = express()
+const app = express();
 
 // 获取并注册cors中间件
-const cors = require('cors')
-app.use(cors())
+app.use(cors());
 
 // upload imag
-app.use('/uploads/', express.static('public/uploads/'))
+app.use('/uploads/', express.static('public/uploads/'));
+
 // 解析 JSON 请求体
 app.use(express.json());
-// 配置解析表单的中间件
-app.use(express.urlencoded({ extended: false }))
 
-// 优化 res.send代码,配置新的返回属性,自行封装组件
+// 配置解析表单的中间件
+app.use(express.urlencoded({ extended: false }));
+
+// 优化 res.send 代码, 配置新的返回属性，封装组件
 app.use((req, res, next) => {
     // @ts-ignore
     res.cc = (err, status = 1) => {
         res.send({
             status,
-            message: err instanceof Error ? err.message : err
-        })
-    }
-    next()
-})
+            message: err instanceof Error ? err.message : err,
+        });
+    };
+    next();
+});
 
-// 引入分析token的中间件和加密串
-const { jwtSecretKey } = require('./config/jwtConfig')
-const expressJWT = require('express-jwt')
-// 指定哪些接口不需要token验证
-// @ts-ignore
-app.use(expressJWT({
-    secret: jwtSecretKey
-}).unless({
-    path: [
-        /^\/user\/register/,
-        /^\/user\/login/
-    ]
-}))
+// 指定哪些接口不需要 token 验证
+app.use(
+    expressJWT({
+        secret: jwtSecretKey,
+    }).unless({
+        path: [/^\/user\/register/, /^\/user\/login/],
+    })
+);
 
-// routers
-const userRouter = require('./router/user')
-app.use('/user', userRouter)
-
-const productRouter = require('./router/product')
-app.use('/products', productRouter)
-
-const cartRouter = require('./router/cart')
-app.use('/cart', cartRouter)
-
-const checkOutRouter = require('./router/checkout')
-app.use('/checkout', checkOutRouter)
+// 路由
+app.use('/user', userRouter);
+app.use('/products', productRouter);
+app.use('/cart', cartRouter);
+app.use('/checkout', checkOutRouter);
 
 // 错误级中间件
 app.use((err, req, res, next) => {
     // token错误
-    if (err.name == 'UnauthorizedError') return res.cc('Identity Validation Failed')
+    if (err.name === 'UnauthorizedError') return res.cc('Identity Validation Failed');
     // 未知错误
-    res.cc(err)
-})
+    res.cc(err);
+});
 
+// 启动服务器
 app.listen(7777, () => {
-    console.log('server running at : http://127.0.0.1:7777')
-})
+    console.log('server running at: http://127.0.0.1:7777');
+});

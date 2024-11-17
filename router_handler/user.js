@@ -1,14 +1,11 @@
-
-const db = require('../db')
-// 获取密码加密模块
-const bcrypt = require('bcryptjs')
-// 用这个包来生成 Token 字符串
-const jwt = require('jsonwebtoken')
-// 获取加密值
-const { jwtSecretKey } = require('../config/jwtConfig')
+import db from '../db/index.js';
+import { bcrypt } from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import jwtConfig from '../config/jwtConfig.js';
+const { jwtSecretKey } = jwtConfig;
 
 // 注册用户的处理函数
-exports.regUser = (req, res) => {
+const regUser = (req, res) => {
 
     const { email, password, role, name, phone, address, payment_method, payment_card_number } = req.body
     if (!email || !password) {
@@ -29,6 +26,7 @@ exports.regUser = (req, res) => {
 
     // 对密码进行加密
     hashedPassword = bcrypt.hashSync(password, 10)
+    console.log(bcrypt)
     // 将用户信息插入到用户表中
     const sqlStr2 = `INSERT INTO user (email, password, role, name, phone, address, payment_method, payment_card_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     db.query(sqlStr2, [email, hashedPassword, 'user' || role, name, phone, address, 'credit' || payment_method, payment_card_number], (err, results) => {
@@ -41,7 +39,7 @@ exports.regUser = (req, res) => {
 }
 
 // 登录用户的处理函数
-exports.login = (req, res) => {
+const login = (req, res) => {
     const { email, password } = req.body
     const sqlStr1 = `select * from user where email= ?`
     db.query(sqlStr1, email, (err, results) => {
@@ -62,7 +60,7 @@ exports.login = (req, res) => {
     })
 }
 // update user profile
-exports.updateUser = (req, res) => {
+const updateUser = (req, res) => {
     const { password, role, name, phone, address, payment_method, payment_card_number, id } = req.body
     // 对密码进行加密
     hashedPassword = bcrypt.hashSync(password, 10)
@@ -85,3 +83,5 @@ exports.updateUser = (req, res) => {
         res.cc('Update Completed', 200)
     })
 }
+
+export default { regUser, login, updateUser }
