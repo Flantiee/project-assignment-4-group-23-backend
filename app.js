@@ -51,6 +51,9 @@ app.use('/products', productRouter)
 const cartRouter = require('./router/cart')
 app.use('/cart', cartRouter)
 
+const checkOutRouter = require('./router/checkout')
+app.use('/checkout', checkOutRouter)
+
 // 错误级中间件
 app.use((err, req, res, next) => {
     // token错误

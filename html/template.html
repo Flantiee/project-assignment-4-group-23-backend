@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Confirmation</title>
+  </head>
+  <body>
+    <h2>Thank you for your order, {{user_name}}!</h2>
+    <p>
+      We have successfully processed your order. Below are the details of your
+      transaction:
+    </p>
+
+    <h3>Order Summary</h3>
+    <ul>
+      {{#each items}}
+      <li>
+        {{name}} (x{{quantity}}) - ${{item_price}} each, Total: ${{total_price}}
+      </li>
+      {{/each}}
+    </ul>
+
+    <p><strong>Total Amount: ${{total_amount}}</strong></p>
+    <p><strong>Tax: ${{tax}}</strong></p>
+    <p><strong>Shipping Fee: ${{shipping_fee}}</strong></p>
+    <p><strong>Payment Amount: ${{payment_amount}}</strong></p>
+    <p><strong>Order ID: {{order_id}}</strong></p>
+
+    <p>
+      If you have any questions or need further assistance, feel free to contact
+      us.
+    </p>
+
+    <p>Thank you for shopping with us!</p>
+  </body>
+</html>

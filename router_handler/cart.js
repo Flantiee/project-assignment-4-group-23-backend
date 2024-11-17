@@ -4,7 +4,7 @@ exports.create = (req, res) => {
     const { user_id, product_id, quantity } = req.body;
 
     // 1. 查询商品库存数量
-    const sqlStr1 = `SELECT quantity FROM product WHERE id = ?`;
+    const sqlStr1 = `SELECT quantity, price FROM product WHERE id = ?`;
     db.query(sqlStr1, [product_id], (err, results) => {
         if (err) return res.cc(err.message, 500);
 
@@ -14,6 +14,7 @@ exports.create = (req, res) => {
         }
 
         const availableQuantity = results[0].quantity;
+        const productPrice = results[0].price
 
         // 2. 如果库存不足，返回错误
         if (availableQuantity < quantity) {
@@ -28,8 +29,9 @@ exports.create = (req, res) => {
             // 4. 如果商品已经存在，更新购物车中的数量
             if (results.length > 0) {
                 const newQuantity = parseInt(results[0].quantity, 10) + parseInt(quantity, 10); // 增加商品数量
-                const sqlStr3 = `UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ?`;
-                db.query(sqlStr3, [newQuantity, user_id, product_id], (err, results) => {
+                const newTotalPrice = newQuantity * productPrice
+                const sqlStr3 = `UPDATE cart SET quantity = ?, total_price = ? WHERE user_id = ? AND product_id = ?`;
+                db.query(sqlStr3, [newQuantity, newTotalPrice, user_id, product_id], (err, results) => {
                     if (err) return res.cc(err.message, 500);
 
                     // 5. 更新 product 表中的库存
@@ -42,8 +44,8 @@ exports.create = (req, res) => {
                 });
             } else {
                 // 6. 如果商品不存在，插入新记录
-                const sqlStr4 = `INSERT INTO cart (user_id, product_id, quantity) VALUES(?, ?, ?)`;
-                db.query(sqlStr4, [user_id, product_id, quantity], (err, results) => {
+                const sqlStr4 = `INSERT INTO cart (user_id, product_id, quantity, total_price) VALUES(?, ?, ?, ?)`;
+                db.query(sqlStr4, [user_id, product_id, quantity, quantity * productPrice], (err, results) => {
                     if (err) return res.cc(err.message, 500);
 
                     // 7. 更新 product 表中的库存
@@ -81,7 +83,7 @@ exports.update = (req, res) => {
         const currentCartQuantity = results[0].quantity;
 
         // 2. 查询该商品的库存数量
-        const sqlStr2 = `SELECT quantity FROM product WHERE id = ?`;
+        const sqlStr2 = `SELECT quantity, price FROM product WHERE id = ?`;
         db.query(sqlStr2, [productId], (err, results) => {
             if (err) return res.cc(err.message, 500);
 
@@ -91,6 +93,7 @@ exports.update = (req, res) => {
             }
 
             const availableQuantity = results[0].quantity;
+            const productPrice = results[0].price
 
             // 3. 计算库存是否足够，如果新数量大于现有数量，检查库存
             if (quantity > currentCartQuantity) {
@@ -101,9 +104,10 @@ exports.update = (req, res) => {
                 }
             }
 
-            // 4. 更新购物车中指定商品的数量
-            const sqlStr3 = `UPDATE cart SET quantity = ? WHERE id = ?`;
-            db.query(sqlStr3, [quantity, id], (err, results) => {
+            // 4. 更新购物车中指定商品的数量 & update totalPrice 
+            const totalPrice = quantity * productPrice
+            const sqlStr3 = `UPDATE cart SET quantity = ?, total_price = ? WHERE id = ?`;
+            db.query(sqlStr3, [quantity, totalPrice, id], (err, results) => {
                 if (err) return res.cc(err.message, 500);
 
                 // 5. 更新商品的库存
@@ -172,7 +176,7 @@ exports.delete = (req, res) => {
 
 exports.getCartListById = (req, res) => {
     const { user_id } = req.query;
-    const sqlStr = `SELECT cart.*, product.name, product.image_url, product.price, description FROM cart LEFT JOIN product ON cart.product_id = product.id WHERE cart.user_id = ?`
+    const sqlStr = `SELECT cart.*, product.name, product.image_url, product.price, description FROM cart LEFT JOIN product ON cart.product_id = product.id WHERE cart.user_id = ? AND cart.checkout_id IS NULL`
 
     db.query(sqlStr, user_id, (err, results) => {
         if (err) return res.cc(err.message, 500);
