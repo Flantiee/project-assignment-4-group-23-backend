@@ -17,4 +17,7 @@ router.post('/login', userHandler.login)
 // update user
 router.put('/update', userHandler.updateUser)
 
+// getUser Info
+router.get('/', userHandler.userInfo)
+
 module.exports = router

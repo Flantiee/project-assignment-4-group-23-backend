@@ -57,7 +57,7 @@ app.use('/checkout', checkOutRouter)
 // 错误级中间件
 app.use((err, req, res, next) => {
     // token错误
-    if (err.name == 'UnauthorizedError') return res.cc('Identity Validation Failed')
+    if (err.name == 'UnauthorizedError') return res.status(401).json({ error: "Identification Validation Failed" })
     // 未知错误
     res.cc(err)
 })

@@ -46,18 +46,18 @@ exports.login = (req, res) => {
     const sqlStr1 = `select * from user where email= ?`
     db.query(sqlStr1, email, (err, results) => {
         if (err) return res.cc(err)
-        if (results.length != 1) return res.cc('Wrong Email')
+        if (results.length != 1) return res.status(401).cc('Wrong Email')
         // 比较密码是否正确 (一定要记得写resutls[0])
         const compareResult = bcrypt.compareSync(password, results[0].password)
-        if (!compareResult) return res.cc('Wrong Password')
+        if (!compareResult) return res.status(401).cc('Wrong Password')
         // 获取用户信息的综合
         const user = { ...results[0], password: '', user_pic: '' }
         // 生成token
-        const tokenStr = jwt.sign(user, jwtSecretKey, { expiresIn: '24h' })
+        const tokenStr = jwt.sign({ id: user.id }, jwtSecretKey, { expiresIn: '24h' })
         res.send({
             status: 200,
             message: 'Login Completed',
-            token: "Bearer " + tokenStr
+            token: tokenStr,
         })
     })
 }
@@ -83,5 +83,28 @@ exports.updateUser = (req, res) => {
         // SQL 语句执行成功，但影响行数不为 1
         if (results.affectedRows !== 1) return res.cc('Failed to register')
         res.cc('Update Completed', 200)
+    })
+}
+
+exports.userInfo = (req, res) => {
+    const token = req.headers['authorization']?.split(' ')[1]; // 获取 "Bearer <token>"
+    let id = -1
+
+    try {
+        const decoded = jwt.verify(token, jwtSecretKey); // 解密并验证
+        id = decoded.id; // 将解密后的 payload 添加到请求对象上
+    } catch (error) {
+        return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+
+    const sqlStr = `select * from user where id= ?`
+    db.query(sqlStr, id, (err, results) => {
+        if (err) return res.status(500).cc(err)
+        const user = { ...results[0], password: '', user_pic: '' }
+        res.send({
+            status: 200,
+            message: 'successed',
+            data: user
+        })
     })
 }
