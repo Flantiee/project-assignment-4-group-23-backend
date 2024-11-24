@@ -21,8 +21,8 @@ exports.create = (req, res) => {
             return res.cc("Insufficient stock", 400);
         }
 
-        // 3. 检查购物车中是否已经存在该商品
-        const sqlStr2 = `SELECT * FROM cart WHERE user_id = ? AND product_id = ?`;
+        // 3. 检查购物车中是否已经存在该商品,并且没有被结算
+        const sqlStr2 = `SELECT * FROM cart WHERE user_id = ? AND product_id = ? AND checkout_id IS null`;
         db.query(sqlStr2, [user_id, product_id], (err, results) => {
             if (err) return res.cc(err.message, 500);
 
@@ -128,11 +128,11 @@ exports.delete = (req, res) => {
     // 1. 查询购物车中该商品的数量
     const sqlStr1 = `SELECT product_id, quantity FROM cart WHERE id = ?`;
     db.query(sqlStr1, [id], (err, results) => {
-        if (err) return res.cc(err.message, 500);
+        if (err) return res.status(500).cc(err.message, 500);
 
         // 如果购物车中没有该商品，返回错误信息
         if (results.length === 0) {
-            return res.cc('No such product found in the cart.', 404);
+            return res.status(500).cc('No such product found in the cart.', 404);
         }
 
         const productId = results[0].product_id;
@@ -141,21 +141,21 @@ exports.delete = (req, res) => {
         // 2. 执行删除操作
         const sqlStr2 = `DELETE FROM cart WHERE id = ?`;
         db.query(sqlStr2, [id], (err, results) => {
-            if (err) return res.cc(err.message, 500);
+            if (err) return res.status(500).cc(err.message, 500);
 
             // 如果删除操作没有影响任何记录，返回错误信息
             if (results.affectedRows === 0) {
-                return res.cc('No such product found in the cart to delete.', 404);
+                return res.status(500).cc('No such product found in the cart to delete.', 404);
             }
 
             // 3. 更新产品库存，将该商品的数量加回
             const sqlStr3 = `SELECT quantity FROM product WHERE id = ?`;
             db.query(sqlStr3, [productId], (err, results) => {
-                if (err) return res.cc(err.message, 500);
+                if (err) return res.status(500).cc(err.message, 500);
 
                 // 如果没有找到商品，返回错误信息
                 if (results.length === 0) {
-                    return res.cc('Product not found in inventory.', 404);
+                    return res.status(500).cc('Product not found in inventory.', 404);
                 }
 
                 const currentStock = results[0].quantity;
@@ -164,7 +164,7 @@ exports.delete = (req, res) => {
                 // 4. 更新库存
                 const sqlStr4 = `UPDATE product SET quantity = ? WHERE id = ?`;
                 db.query(sqlStr4, [newStock, productId], (err, results) => {
-                    if (err) return res.cc(err.message, 500);
+                    if (err) return res.status(500).cc(err.message, 500);
 
                     // 5. 返回成功消息
                     return res.cc('Product deleted from cart and stock updated successfully.', 200);
@@ -175,10 +175,10 @@ exports.delete = (req, res) => {
 };
 
 exports.getCartListById = (req, res) => {
-    const { user_id } = req.query;
+    const { id } = req.query;
     const sqlStr = `SELECT cart.*, product.name, product.image_url, product.price, description FROM cart LEFT JOIN product ON cart.product_id = product.id WHERE cart.user_id = ? AND cart.checkout_id IS NULL`
 
-    db.query(sqlStr, user_id, (err, results) => {
+    db.query(sqlStr, id, (err, results) => {
         if (err) return res.cc(err.message, 500);
         if (results.length <= 0) return res.cc("The cart is empty", 404)
         res.send({

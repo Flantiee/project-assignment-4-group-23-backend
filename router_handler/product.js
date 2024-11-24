@@ -1,29 +1,27 @@
 const db = require('../db')
 const upload = require('../util/upload')
+const fetchBrandReviews = require('../util/getExternalData')
 exports.create = (req, res) => {
-    upload(req, res).then(imgsrc => {
 
-        const { name, price, category, brand, quantity, description } = req.body;
 
-        const sqlStr = `
+    const { name, price, category, brand, quantity, description, img } = req.body;
+
+    const sqlStr = `
             INSERT INTO product (name, price, category, brand, image_url, quantity, description)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
-        db.query(sqlStr, [name, price, category, brand, imgsrc, quantity, description], (err, results) => {
-            if (err) return res.cc(err)
-            // SQL 语句执行成功，但影响行数不为 1
-            res.cc('New Product Created', 200)
-        })
-    }).catch(err => {
-        res.cc(err.message)
+    db.query(sqlStr, [name, price, category, brand, img, quantity, description], (err, results) => {
+        if (err) return res.status(500).cc(err)
+        // SQL 语句执行成功，但影响行数不为 1
+        res.status(201).cc('New Product Created', 201)
     })
+
 }
 
 exports.update = (req, res) => {
-    upload(req, res).then(imgsrc => {
-        const { name, price, category, brand, quantity, description, id } = req.body;
+    const { name, price, category, brand, quantity, description, id, img } = req.body;
 
-        const sqlStr = `
+    const sqlStr = `
          UPDATE product
             SET 
                 name = COALESCE(?, name),
@@ -35,26 +33,33 @@ exports.update = (req, res) => {
                 description = COALESCE(?, description)
             WHERE id = ?;
         `
-        db.query(sqlStr, [name, price, category, brand, imgsrc, quantity, description, id], (err, results) => {
-            if (err) return res.cc(err)
-            // SQL 语句执行成功，但影响行数不为 1
-            res.cc('Product Update Created', 200)
-        })
-    }).catch(err => {
-        res.cc(err.message)
+    db.query(sqlStr, [name, price, category, brand, img, quantity, description, id], (err, results) => {
+        if (err) return res.status(500).cc(err)
+        // SQL 语句执行成功，但影响行数不为 1
+        res.status(200).cc('Product Update Created', 200)
     })
+
 }
 
 exports.getDetail = (req, res) => {
     const { id } = req.params
     const sqlStr = `SELECT * FROM product WHERE id = ?`
-    db.query(sqlStr, parseInt(id, 10), (err, results) => {
+    db.query(sqlStr, parseInt(id, 10), async (err, results) => {
         if (err) return res.cc(err)
         if (results.length > 1) return res.cc('Duplicate records')
-        res.send({
+        const response = await fetchBrandReviews(results[0].brand)
+        if (response.status === 'OK')
+            res.send({
+                status: 200,
+                message: 'Success',
+                data: results[0],
+                reviews: response.data.reviews
+            })
+        else res.send({
             status: 200,
             message: 'Success',
-            data: results[0]
+            data: results[0],
+            reviews: []
         })
     })
 }
@@ -84,8 +89,8 @@ exports.getProductsByList = async (req, res) => {
             max_price,
             name,
             page = 1,
-            limit = 10,
-            sort_by = 'created_at',
+            limit = 3,
+            sort_by = 'price',
             sort_order = 'desc'
         } = req.query;
 
@@ -119,22 +124,36 @@ exports.getProductsByList = async (req, res) => {
         const offset = (page - 1) * limit;
         const limitClause = `LIMIT ? OFFSET ?`;
 
-        const sql = `
-          SELECT * FROM product
-          ${whereConditions}
-          ${order}
-          ${limitClause}
+        const countSql = `
+            SELECT COUNT(*) AS totalCount
+            FROM product
+            ${whereConditions}
         `;
 
-        // 执行查询
-        const result = await db.query(sql, [...params, parseInt(limit), offset], (err, results) => {
-            if (err) return res.cc(err)
-            res.send({
-                status: 200,
-                size: results.length,
-                data: results,
-            })
+        const countResult = db.query(countSql, [...params], (err, results) => {
+            if (results) {
+                const totalCount = results[0].totalCount;
+
+                const sql = `
+                SELECT * FROM product
+                ${whereConditions}
+                ${order}
+                ${limitClause}
+              `
+                // 执行查询
+                const result = db.query(sql, [...params, parseInt(limit), offset], (err, results) => {
+
+                    if (err) return res.cc(err)
+                    res.send({
+                        status: 200,
+                        size: totalCount,
+                        data: results,
+                    })
+                });
+            }
         });
+
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });

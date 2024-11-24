@@ -1,6 +1,7 @@
 // 引入express框架
 const express = require('express')
 
+
 // 构造服务器实例
 const app = express()
 
@@ -9,7 +10,8 @@ const cors = require('cors')
 app.use(cors())
 
 // upload imag
-app.use('/uploads/', express.static('public/uploads/'))
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 // 解析 JSON 请求体
 app.use(express.json());
 // 配置解析表单的中间件
@@ -37,7 +39,8 @@ app.use(expressJWT({
 }).unless({
     path: [
         /^\/user\/register/,
-        /^\/user\/login/
+        /^\/user\/login/,
+        /^\/uploads\//
     ]
 }))
 
@@ -53,6 +56,9 @@ app.use('/cart', cartRouter)
 
 const checkOutRouter = require('./router/checkout')
 app.use('/checkout', checkOutRouter)
+
+const uploadRouter = require('./router/upload')
+app.use('/upload', uploadRouter)
 
 // 错误级中间件
 app.use((err, req, res, next) => {

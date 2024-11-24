@@ -14,7 +14,7 @@ const query = (sql, params) => {
 };
 
 exports.getCheckOutDetail = (req, res) => {
-    const { user_id } = req.query;
+    const { id } = req.query;
 
     const sqlStr = `
         SELECT 
@@ -41,7 +41,7 @@ exports.getCheckOutDetail = (req, res) => {
             u.payment_card_number;
     `;
 
-    db.query(sqlStr, [user_id], (err, results) => {
+    db.query(sqlStr, [id], (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: 'Database Internal Error', error: err.message });
@@ -72,7 +72,7 @@ exports.getCheckOutDetail = (req, res) => {
 
 
 exports.confirmCheckOut = async (req, res) => {
-    const { user_id } = req.query;
+    const { id } = req.query;
 
     try {
         // Step 1: Get user and cart details (包括商品信息)
@@ -101,7 +101,7 @@ exports.confirmCheckOut = async (req, res) => {
                 u.payment_method, 
                 u.payment_card_number;
         `;
-        const userResults = await query(sqlStr1, [user_id]);
+        const userResults = await query(sqlStr1, [id]);
         if (userResults.length === 0) {
             return res.status(404).json({ message: 'Cart List not found' });
         }
@@ -125,7 +125,7 @@ exports.confirmCheckOut = async (req, res) => {
             LEFT JOIN product p ON c.product_id = p.id
             WHERE c.user_id = ? AND c.checkout_id IS NULL;
         `;
-        const cartItems = await query(sqlStr2, [user_id]);
+        const cartItems = await query(sqlStr2, [id]);
 
         // 如果没有商品
         if (cartItems.length === 0) {
@@ -137,12 +137,12 @@ exports.confirmCheckOut = async (req, res) => {
             INSERT INTO checkout (user_id, total_price, tax, shipping_fee, payment_amount, payment_method, address)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
-        const insertResult = await query(sqlStr3, [user_id, total_price, tax, shipping_fee, payment_amount, payment_method, address]);
+        const insertResult = await query(sqlStr3, [id, total_price, tax, shipping_fee, payment_amount, payment_method, address]);
         const checkoutId = insertResult.insertId;
 
         // Step 4: Update cart with checkout_id
-        const sqlStr4 = `UPDATE cart SET checkout_id = ? WHERE user_id = ?`;
-        await query(sqlStr4, [checkoutId, user_id]);
+        const sqlStr4 = `UPDATE cart SET checkout_id = ? WHERE user_id = ? AND checkout_id IS null`;
+        await query(sqlStr4, [checkoutId, id]);
 
         // Step 5: Prepare the HTML content using Handlebars
         // 获取 template.html 的绝对路径
@@ -154,10 +154,10 @@ exports.confirmCheckOut = async (req, res) => {
         const emailContent = template({
             user_name: checkoutData.name,
             items: cartItems,
-            total_amount: total_price,
-            tax: tax,
-            shipping_fee: shipping_fee,
-            payment_amount: payment_amount,
+            total_amount: total_price.toFixed(2),
+            tax: tax.toFixed(2),
+            shipping_fee: shipping_fee.toFixed(2),
+            payment_amount: payment_amount.toFixed(2),
             order_id: checkoutId
         });
 
@@ -178,6 +178,7 @@ exports.confirmCheckOut = async (req, res) => {
 
         // 成功响应
         res.status(201).json({
+            status: '201',
             message: 'Checkout successful'
         });
 
@@ -188,12 +189,13 @@ exports.confirmCheckOut = async (req, res) => {
 };
 
 exports.getPreviousOrderList = (req, res) => {
-    const { user_id } = req.query;
-    const sqlStr = `SELECT * FROM checkout WHERE user_id = ?`
-    db.query(sqlStr, user_id, (err, results) => {
+    const { id } = req.query;
+    const sqlStr = `SELECT * FROM checkout WHERE user_id = ? ORDER BY created_at desc`
+    db.query(sqlStr, id, (err, results) => {
         if (err) res.cc(err)
 
         res.status(200).json({
+            status: 200,
             size: results.length,
             data: results
         })
